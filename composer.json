@@ -1,0 +1,50 @@
+{
+    "name": "qubus/security",
+    "description": "Security components.",
+    "keywords": [
+        "csrf",
+        "security",
+        "escaper",
+        "htmlpurifier"
+    ],
+    "homepage": "https://github.com/QubusPHP/security",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Joshua Parler",
+            "email": "josh@joshuaparker.blog",
+            "homepage": "https://joshuaparker.dev",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.4",
+        "gettext/gettext": "^4.8",
+        "gettext/languages": "^2.6",
+        "ircmaxell/random-lib": "^1.2",
+        "qubus/event-dispatcher": "^1.0"
+    },
+    "require-dev": {
+        "laminas/laminas-coding-standard": "^2.0",
+        "squizlabs/php_codesniffer": "^3.3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Qubus\\Security\\": ""
+        },
+        "files": [
+            "Helpers/core.php",
+            "Helpers/domain.php"
+        ]
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit --colors=always",
+        "cs-check": "phpcs",
+        "cs-fix": "phpcbf"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}
