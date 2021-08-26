@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "php": "^7.4",
+        "php": "^8.0",
         "gettext/gettext": "^4.8",
         "gettext/languages": "^2.6",
         "ircmaxell/random-lib": "^1.2",
