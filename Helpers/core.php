@@ -34,6 +34,28 @@ use function preg_replace;
 use function stripslashes;
 
 /**
+ * Escaper function calling the Escaper class.
+ * 
+ * @access private
+ * @return \Qubus\Security\Escaper 
+ */
+function __escaper(): Escaper
+{
+    return new Escaper();
+}
+
+/**
+ * Observer function calling the Observer class.
+ * 
+ * @access private
+ * @return \Qubus\EventDispatcher\ActionFilter\Observer 
+ */
+function __observer(): Observer
+{
+    return new Observer();
+}
+
+/**
  * Escaping for HTML output.
  *
  * @param string $string Html element to escape.
@@ -41,24 +63,24 @@ use function stripslashes;
  */
 function esc_html(string $string): string
 {
-    $safeString = (new Escaper())->html($string);
+    $safeString = __escaper()->html($string);
     /**
      * Filters a clean and escaped string for HTML output.
      *
      * @param string $safeString String after it has been escaped.
      * @param string $string     String before it has been escaped.
      */
-    return (new Observer())->filter->applyFilter('esc_html', $safeString, $string);
+    return __observer()->filter->applyFilter('esc_html', $safeString, $string);
 }
 
 /**
  * Escapes a translated string to make it safe for HTML output.
  *
  * @param string $string String to translate.
- * @param string $domain Optional. Text domain. Default: 'codefy'.
+ * @param string $domain Optional. Text domain. Default: 'qubus'.
  * @return string Translated string.
  */
-function esc_html__(string $string, string $domain = 'codefy'): string
+function esc_html__(string $string, string $domain = 'qubus'): string
 {
     return esc_html(t__($string, $domain));
 }
@@ -70,14 +92,14 @@ function esc_html__(string $string, string $domain = 'codefy'): string
  */
 function esc_textarea(string $string): string
 {
-    $safeString = (new Escaper())->textarea($string);
+    $safeString = __escaper()->textarea($string);
     /**
      * Filters a clean and escaped string for textarea output.
      *
      * @param string $safeString String after it has been escaped.
      * @param string $string     String before it has been escaped.
      */
-    return (new Observer())->filter->applyFilter('esc_textarea', $safeString, $string);
+    return __observer()->filter->applyFilter('esc_textarea', $safeString, $string);
 }
 
 /**
@@ -90,14 +112,14 @@ function esc_textarea(string $string): string
  */
 function esc_url(string $url, array $scheme = ['http', 'https'], bool $encode = false): string
 {
-    $safeUrl = (new Escaper())->url($url, $scheme, $encode);
+    $safeUrl = __escaper()->url($url, $scheme, $encode);
     /**
      * Filters a clean and escaped url for output.
      *
      * @param string $safeUrl The escaped url to be returned.
      * @param string $url     The url prior to being escaped.
      */
-    return (new Observer())->filter->applyFilter('esc_url', $safeUrl, $url);
+    return __observer()->filter->applyFilter('esc_url', $safeUrl, $url);
 }
 
 /**
@@ -107,14 +129,14 @@ function esc_url(string $url, array $scheme = ['http', 'https'], bool $encode = 
  */
 function esc_attr(string $string): string
 {
-    $safeString = (new Escaper())->attr($string);
+    $safeString = __escaper()->attr($string);
     /**
      * Filters a clean and escaped string for HTML attribute output.
      *
      * @param string $safeString String after it has been escaped.
      * @param string $string     String before it has been escaped.
      */
-    return (new Observer())->filter->applyFilter('esc_attr', $safeString, $string);
+    return __observer()->filter->applyFilter('esc_attr', $safeString, $string);
 }
 
 /**
@@ -122,10 +144,10 @@ function esc_attr(string $string): string
  *
  * @param string $string String to translate.
  * @param string $domain Optional. Unique identifier for retrieving translated string.
- *                       Default: 'codefy'.
+ *                       Default: 'qubus'.
  * @return string Translated string.
  */
-function esc_attr__(string $string, string $domain = 'codefy'): string
+function esc_attr__(string $string, string $domain = 'qubus'): string
 {
     return esc_attr(t__($string, $domain));
 }
@@ -143,14 +165,14 @@ function esc_attr__(string $string, string $domain = 'codefy'): string
  */
 function esc_js(string $string): string
 {
-    $safeString = (new Escaper())->js($string);
+    $safeString = __escaper()->js($string);
     /**
      * Filters a clean and escaped string for inline javascript output.
      *
      * @param string $safeString String after it has been escaped.
      * @param string $string     String before it has been escaped.
      */
-    return (new Observer())->filter->applyFilter('esc_js', $safeString, $string);
+    return __observer()->filter->applyFilter('esc_js', $safeString, $string);
 }
 
 /**
@@ -177,7 +199,7 @@ function purify_html(string $string, bool $isImage = false): string
  * @param array|string $string     String or array to be split.
  * @return array Return array.
  */
-function explode_array($delimiters, $string): array
+function explode_array(array|string $delimiters, array|string $string): array
 {
     if (! is_array($delimiters) && ! is_array($string)) {
         //if neither the delimiter nor the string are arrays
@@ -220,9 +242,9 @@ function each__(&$arr)
  * Navigates through an array, object, or scalar, and removes slashes from the values.
  *
  * @param mixed $value  The value to be stripped.
- * @return mixed Stripped value.
+ * @return array|string Stripped value.
  */
-function stripslashes_deep($value)
+function stripslashes_deep(mixed $value): array|string
 {
     return is_array($value) ?
     array_map([__FUNCTION__, 'stripslashes_deep'], $value) :
@@ -236,7 +258,7 @@ function stripslashes_deep($value)
  * @param string|array $value String or array of strings to unslash.
  * @return string|array Unslashed value.
  */
-function unslash($value)
+function unslash(mixed $value): array|string
 {
     return stripslashes_deep($value);
 }
@@ -269,9 +291,9 @@ function flatten_array(array $array): array
  * Removes all whitespace.
  *
  * @param string $string String to trim.
- * @return mixed
+ * @return array|string|null
  */
-function trim__(string $string)
+function trim__(array|string $string): array|string|null
 {
     return preg_replace('/\s/', '', $string);
 }
@@ -325,7 +347,7 @@ function strip_tags__(
         $newString = preg_replace('/[\r\n\t ]+/', ' ', $newString);
     }
 
-    return (new Observer())->filter->applyFilter(
+    return __observer()->filter->applyFilter(
         'strip_tags',
         $newString,
         $rawString,
