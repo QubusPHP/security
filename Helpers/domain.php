@@ -4,7 +4,7 @@
  * Qubus\Security
  *
  * @link       https://github.com/QubusPHP/security
- * @copyright  2020 Joshua Parker
+ * @copyright  2020 Joshua Parker <josh@joshuaparker.blog>
  * @license    https://opensource.org/licenses/mit-license.php MIT License
  *
  * @since      1.0.0
@@ -16,17 +16,19 @@ namespace Qubus\Security\Helpers;
 
 use Gettext\Translations;
 use Gettext\Translator;
-use Qubus\EventDispatcher\ActionFilter\Observer;
+use Gettext\TranslatorInterface;
 
 use function d__;
 use function is_readable;
+use function Qubus\Security\Helpers\__observer;
 
 /**
  * Returns the Translator object.
  *
+ * @access private
  * @return Translator;
  */
-function return_translator()
+function __translator(): TranslatorInterface
 {
     return new Translator();
 }
@@ -40,9 +42,9 @@ function return_translator()
  */
 function t__(string $msgid, string $domain = '')
 {
-    return_translator()->register();
+    __translator()->register();
 
-    $domain = '' !== $domain ? $domain : 'codefy';
+    $domain = '' !== $domain ? $domain : 'qubus';
 
     return d__($domain, $msgid);
 }
@@ -79,7 +81,7 @@ function load_textdomain(string $domain, string $path): bool
      * @param string $domain   Text domain. Unique ID for retrieving translated strings.
      * @param string $path     Path to the .mo file.
      */
-    $override = (new Observer())->filter->applyFilter('override_load_textdomain', false, $domain, $path);
+    $override = __observer()->filter->applyFilter('override_load_textdomain', false, $domain, $path);
 
     if (true === $override) {
         return true;
@@ -91,7 +93,7 @@ function load_textdomain(string $domain, string $path): bool
      * @param string $domain Text domain. Unique ID for retrieving translated strings.
      * @param string $path Path to the .mo file.
      */
-    (new Observer())->action->doAction('load_textdomain', $domain, $path);
+    __observer()->action->doAction('load_textdomain', $domain, $path);
 
     /**
      * Filter .mo file path for loading translations for a specific text domain.
@@ -99,14 +101,14 @@ function load_textdomain(string $domain, string $path): bool
      * @param string $path Path to the .mo file.
      * @param string $domain Text domain. Unique ID for retrieving translated strings.
      */
-    $mofile = (new Observer())->filter->applyFilter('load_textdomain_mofile', $path, $domain);
+    $mofile = __observer()->filter->applyFilter('load_textdomain_mofile', $path, $domain);
     // Load only if the .mo file is present and readable.
     if (! is_readable($mofile)) {
         return false;
     }
 
     $translations = Translations::fromMoFile($mofile);
-    return_translator()->loadTranslations($translations);
+    __translator()->loadTranslations($translations);
 
     return true;
 }
@@ -120,5 +122,5 @@ function load_core_locale(): string
 {
     $locale = 'en';
 
-    return (new Observer())->filter->applyFilter('core_locale', $locale);
+    return __observer()->filter->applyFilter('core_locale', $locale);
 }
