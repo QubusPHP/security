@@ -1,3 +1,7 @@
+## 2.0.0 (2022.07.14)
+- Bumped up PHP requirement to 8.1.
+- Fixed memory consumption.
+
 ## 1.1.0 (2021.08.25)
 - Bumped up PHP requirement to 8.x.
 
