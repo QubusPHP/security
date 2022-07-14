@@ -194,7 +194,7 @@ function explode_array($delimiters, $string): array
         //if the delimiter is an array but the string is not
         $stringArray[] = $string;
         foreach ($delimiters as $delimiter) {
-            $stringArray = array_explode($delimiter, $stringArray);
+            $stringArray = explode_array($delimiter, $stringArray);
         }
         return $stringArray;
     }
