@@ -35,9 +35,8 @@ use function stripslashes;
 
 /**
  * Escaper function calling the Escaper class.
- * 
+ *
  * @access private
- * @return \Qubus\Security\Escaper 
  */
 function __escaper(): Escaper
 {
@@ -46,9 +45,8 @@ function __escaper(): Escaper
 
 /**
  * Observer function calling the Observer class.
- * 
+ *
  * @access private
- * @return \Qubus\EventDispatcher\ActionFilter\Observer 
  */
 function __observer(): Observer
 {
@@ -291,7 +289,6 @@ function flatten_array(array $array): array
  * Removes all whitespace.
  *
  * @param string $string String to trim.
- * @return array|string|null
  */
 function trim__(array|string $string): array|string|null
 {

@@ -16,6 +16,7 @@ namespace Qubus\Security\Helpers;
 
 use Gettext\Translations;
 use Gettext\Translator;
+use Gettext\TranslatorInterface;
 
 use function d__;
 use function is_readable;
@@ -27,7 +28,7 @@ use function Qubus\Security\Helpers\__observer;
  * @access private
  * @return Translator;
  */
-function __translator()
+function __translator(): TranslatorInterface
 {
     return new Translator();
 }
