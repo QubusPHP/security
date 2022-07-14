@@ -4,7 +4,7 @@
  * Qubus\Security
  *
  * @link       https://github.com/QubusPHP/security
- * @copyright  2020 Joshua Parker
+ * @copyright  2020 Joshua Parker <josh@joshuaparker.blog>
  * @license    https://opensource.org/licenses/mit-license.php MIT License
  *
  * @since      1.0.0
@@ -151,7 +151,6 @@ class HtmlPurifier implements Purifier
      * accepted and then purified on output for optimal results. For output of images,
      * make sure to escape with esc_url().
      *
-     * @since 1.0.0
      * @param string|string[] $string The string to purify.
      * @param bool   $isImage   Is the string an image?
      * @return string Escaped rich text.
