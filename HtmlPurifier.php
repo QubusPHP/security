@@ -4,10 +4,9 @@
  * Qubus\Security
  *
  * @link       https://github.com/QubusPHP/security
- * @copyright  2020 Joshua Parker <josh@joshuaparker.blog>
+ * @copyright  2020
+ * @author     Joshua Parker <joshua@joshuaparker.dev>
  * @license    https://opensource.org/licenses/mit-license.php MIT License
- *
- * @since      1.0.0
  */
 
 declare(strict_types=1);
@@ -152,10 +151,10 @@ class HtmlPurifier implements Purifier
      * make sure to escape with esc_url().
      *
      * @param string|string[] $string The string to purify.
-     * @param bool   $isImage   Is the string an image?
-     * @return string Escaped rich text.
+     * @param bool $isImage Is the string an image?
+     * @return string|bool|array Escaped rich text.
      */
-    public function purify($string, bool $isImage = false): string
+    public function purify($string, bool $isImage = false): string|bool|array
     {
         /*
          * Is the string an array?
@@ -368,10 +367,10 @@ class HtmlPurifier implements Purifier
 
         /*
          * Images are Handled in a Special Way
-         * - Essentially, we want to know that after all of the character
+         * - Essentially, we want to know that after all the character
          * conversion is done whether any unwanted, likely XSS, code was found.
          * If not, we return true, as the image is clean.
-         * However, if the string post-conversion does not matched the
+         * However, if the string post-conversion does not match the
          * string post-removal of XSS, then it fails, as there was unwanted XSS
          * code found and removed/changed during processing.
          */
@@ -422,7 +421,7 @@ class HtmlPurifier implements Purifier
      * @param array $matches
      * @return string
      */
-    protected function urlDecodeSpaces($matches)
+    protected function urlDecodeSpaces($matches): string
     {
         $input    = $matches[0];
         $nospaces = preg_replace('#\s+#', '', $input);
@@ -440,7 +439,7 @@ class HtmlPurifier implements Purifier
      * @param array $matches
      * @return string
      */
-    protected function compactExplodedWords($matches)
+    protected function compactExplodedWords($matches): string
     {
         return preg_replace('/\s+/s', '', $matches[1]) . $matches[2];
     }
@@ -462,7 +461,7 @@ class HtmlPurifier implements Purifier
      * @param boolean $isImage true if this is an image
      * @return string The string with the evil attributes removed
      */
-    protected function removeEvilAttributes(string $string, bool $isImage)
+    protected function removeEvilAttributes(string $string, bool $isImage): string
     {
         // All javascript event handlers (e.g. onload, onclick, onmouseover), style, and xmlns
         //$evilAttributes = ['on\w*', 'style', 'xmlns', 'formaction'];
@@ -527,7 +526,7 @@ class HtmlPurifier implements Purifier
      * @param array $matches
      * @return string
      */
-    protected function sanitizeNaughtyHtml($matches)
+    protected function sanitizeNaughtyHtml($matches): string
     {
         // encode opening brace
         $string = '&lt;' . $matches[1] . $matches[2] . $matches[3];
@@ -547,7 +546,7 @@ class HtmlPurifier implements Purifier
      * @param array $match
      * @return string
      */
-    protected function jsLinkRemoval($match)
+    protected function jsLinkRemoval($match): string
     {
         return str_replace(
             $match[1],
@@ -570,7 +569,7 @@ class HtmlPurifier implements Purifier
      * @param array $match
      * @return string
      */
-    protected function jsImgRemoval($match)
+    protected function jsImgRemoval($match): string
     {
         return str_replace(
             $match[1],
@@ -592,7 +591,7 @@ class HtmlPurifier implements Purifier
      * @param array $match
      * @return string
      */
-    protected function convertAttribute($match)
+    protected function convertAttribute($match): string
     {
         return str_replace(['>', '<', '\\'], ['&gt;', '&lt;', '\\\\'], $match[0]);
     }
@@ -605,7 +604,7 @@ class HtmlPurifier implements Purifier
      * @param string $string
      * @return string
      */
-    protected function filterAttributes($string)
+    protected function filterAttributes(string $string): string
     {
         $out = '';
 
@@ -626,7 +625,7 @@ class HtmlPurifier implements Purifier
      * @param array $match
      * @return string
      */
-    protected function decodeEntity($match)
+    protected function decodeEntity($match): string
     {
         return $this->entityDecode($match[0], strtoupper($this->mbencoding));
     }
@@ -636,9 +635,10 @@ class HtmlPurifier implements Purifier
      *
      * Called by $this->purify().
      *
+     * @param string $string
      * @return string
      */
-    protected function validateEntities(string $string)
+    protected function validateEntities(string $string): string
     {
         /*
          * Validate standard character entities
@@ -655,9 +655,7 @@ class HtmlPurifier implements Purifier
          * Just as above, adds a semicolon if missing.
          *
          */
-        $string = preg_replace('#(&\#x?)([0-9A-F]+);?#i', "\\1\\2;", $string);
-
-        return $string;
+        return preg_replace('#(&\#x?)([0-9A-F]+);?#i', "\\1\\2;", $string);
     }
 
     /**
@@ -665,9 +663,10 @@ class HtmlPurifier implements Purifier
      *
      * A utility function for $this->purify().
      *
+     * @param string $string
      * @return string
      */
-    protected function neverAllowed(string $string)
+    protected function neverAllowed(string $string): string
     {
         $string = str_replace(array_keys($this->neverAllowedStr), $this->neverAllowedStr, $string);
 

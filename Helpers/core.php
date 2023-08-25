@@ -4,10 +4,9 @@
  * Qubus\Security
  *
  * @link       https://github.com/QubusPHP/security
- * @copyright  2020 Joshua Parker <josh@joshuaparker.blog>
+ * @copyright  2020
+ * @author     Joshua Parker <joshua@joshuaparker.dev>
  * @license    https://opensource.org/licenses/mit-license.php MIT License
- *
- * @since      1.0.0
  */
 
 declare(strict_types=1);
@@ -193,7 +192,7 @@ function purify_html(string $string, bool $isImage = false): string
 /**
  * Split a delimited string into an array.
  *
- * @param array|string $delimiters Delimeter(s) to search for.
+ * @param array|string $delimiters Delimiter(s) to search for.
  * @param array|string $string     String or array to be split.
  * @return array Return array.
  */
@@ -226,9 +225,9 @@ function explode_array(array|string $delimiters, array|string $string): array
  * Return the current key and value pair from an array and advance the array cursor.
  *
  * @param array $arr The input array.
- * @return mixed Returns the current key and value pair from the array array.
+ * @return array|false Returns the current key and value pair from the array.
  */
-function each__(&$arr)
+function each__(array &$arr): array|false
 {
     $key = key($arr);
     $result = $key === null ? false : [$key, current($arr), 'key' => $key, 'value' => current($arr)];
@@ -288,7 +287,8 @@ function flatten_array(array $array): array
 /**
  * Removes all whitespace.
  *
- * @param string $string String to trim.
+ * @param array|string $string $string String to trim.
+ * @return array|string|null
  */
 function trim__(array|string $string): array|string|null
 {
@@ -359,7 +359,7 @@ function strip_tags__(
  *
  * @param string $message Message to be returned.
  */
-function die__(string $message)
+function die__(string $message): void
 {
     die(
         "<link rel=\"stylesheet\" href=\"style.css\">\n<div class=\"die-alert die-alert-info\">$message</div>\n"

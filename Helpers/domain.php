@@ -4,10 +4,9 @@
  * Qubus\Security
  *
  * @link       https://github.com/QubusPHP/security
- * @copyright  2020 Joshua Parker <josh@joshuaparker.blog>
+ * @copyright  2020
+ * @author     Joshua Parker <joshua@joshuaparker.dev>
  * @license    https://opensource.org/licenses/mit-license.php MIT License
- *
- * @since      1.0.0
  */
 
 declare(strict_types=1);
@@ -20,7 +19,6 @@ use Gettext\TranslatorInterface;
 
 use function d__;
 use function is_readable;
-use function Qubus\Security\Helpers\__observer;
 
 /**
  * Returns the Translator object.
@@ -40,7 +38,7 @@ function __translator(): TranslatorInterface
  * @param string $domain Domain lookup for translated text.
  * @return string Translated text according to current locale.
  */
-function t__(string $msgid, string $domain = '')
+function t__(string $msgid, string $domain = ''): string
 {
     __translator()->register();
 

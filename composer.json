@@ -13,21 +13,22 @@
     "authors": [
         {
             "name": "Joshua Parker",
-            "email": "josh@joshuaparker.blog",
+            "email": "joshua@joshuaparker.dev",
             "homepage": "https://joshuaparker.dev",
             "role": "Developer"
         }
     ],
     "require": {
-        "php": ">=8.1",
+        "ext-mbstring": "*",
+        "php": ">=8.2",
         "gettext/gettext": "^4.8",
         "gettext/languages": "^2.6",
         "ircmaxell/random-lib": "^1.2",
-        "qubus/event-dispatcher": "^2.0"
+        "qubus/event-dispatcher": "^3"
     },
     "require-dev": {
-        "laminas/laminas-coding-standard": "^2.0",
         "phpunit/phpunit": "^9.0",
+        "qubus/qubus-coding-standard": "^1.1",
         "squizlabs/php_codesniffer": "^3.5"
     },
     "autoload": {
@@ -46,6 +47,9 @@
     },
     "config": {
         "optimize-autoloader": true,
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     }
 }
