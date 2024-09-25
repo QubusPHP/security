@@ -144,27 +144,31 @@ class Escaper implements CleanHtmlEntities
         $query = $uri['query'] ?? '';
         $result = '';
 
-        if ($uri['scheme']) {
+        if (isset($uri['scheme'])) {
             $result .= $uri['scheme'] . ':';
         }
-        if ($uri['host']) {
+        if (isset($uri['host'])) {
             $result .= '//' . $uri['host'];
         }
-        if ($uri['port']) {
+        if (isset($uri['port'])) {
             $result .= ':' . $uri['port'];
         }
-        if ($uri['path']) {
+        if (isset($uri['path'])) {
             $result .= $uri['path'];
         }
 
+        $fragment = $uri['fragment'] ?? '';
+
+        $newQuery = $query . $fragment;
+
         if ($query) {
-            $newQuery = '?' . $query . ($uri['fragment'] ? $uri['fragment'] : '');
+            $newQuery = '?' . $query . $fragment;
         }
 
         $cleanUrl = $result . $newQuery;
 
         if ($encode) {
-            $cleanUrl = $result . $newQuery . urlencode($uri['fragment'] ? $uri['fragment'] : '');
+            $cleanUrl = $result . $newQuery . urlencode($fragment);
         }
 
         return $cleanUrl;
