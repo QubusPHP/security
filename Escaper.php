@@ -15,21 +15,21 @@ namespace Qubus\Security;
 
 use Qubus\EventDispatcher\ActionFilter\Observer;
 
-use function filter_var;
-use function htmlspecialchars;
-use function in_array;
-use function is_array;
-use function mb_convert_encoding;
-use function parse_url;
-use function strip_tags;
-use function strlen;
-use function urldecode;
 use function urlencode;
+use function urldecode;
+use function strlen;
+use function strip_tags;
+use function parse_url;
+use function mb_convert_encoding;
+use function is_array;
+use function in_array;
+use function htmlspecialchars;
+use function filter_var;
 
-use const ENT_HTML5;
-use const ENT_QUOTES;
-use const FILTER_SANITIZE_SPECIAL_CHARS;
 use const FILTER_VALIDATE_URL;
+use const FILTER_SANITIZE_SPECIAL_CHARS;
+use const ENT_QUOTES;
+use const ENT_HTML5;
 
 class Escaper implements CleanHtmlEntities
 {
@@ -102,7 +102,7 @@ class Escaper implements CleanHtmlEntities
      * @param bool   $encode Whether url params should be encoded.
      * @return string The escaped $url after the `escUrl` filter is applied.
      */
-    public function url(string $url, array $scheme = ['http', 'https'], bool $encode = false): string
+    public function url(string $url, array $scheme = [], bool $encode = false): string
     {
         $rawUrl = $url;
 
@@ -122,6 +122,11 @@ class Escaper implements CleanHtmlEntities
         if (! filter_var($newUrl, FILTER_VALIDATE_URL)) {
             return '';
         }
+
+        /**
+         * Merge default schemes with provided scheme(s).
+         */
+        $scheme = array_merge($scheme, ['http', 'https']);
 
         /**
          * Break down the url into it's parts and then rebuild it.
