@@ -32,8 +32,6 @@ use function preg_match_all;
 use function preg_replace;
 use function stripslashes;
 
-use const __FUNCTION__;
-
 /**
  * Escaper function calling the Escaper class.
  *
