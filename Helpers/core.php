@@ -248,7 +248,7 @@ function each__(array &$arr): array|false
 function stripslashes_deep(mixed $value): array|string
 {
     return is_array($value) ?
-    array_map(__FUNCTION__, $value) :
+    array_map('\Qubus\Security\Helpers\stripslashes_deep', $value) :
     stripslashes($value);
 }
 
