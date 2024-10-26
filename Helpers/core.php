@@ -219,6 +219,8 @@ function explode_array(array|string $delimiters, array|string $string): array
         }
         return $stringArray;
     }
+
+    return [];
 }
 
 /**
