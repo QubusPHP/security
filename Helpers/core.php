@@ -32,6 +32,8 @@ use function preg_match_all;
 use function preg_replace;
 use function stripslashes;
 
+use const __FUNCTION__;
+
 /**
  * Escaper function calling the Escaper class.
  *
@@ -217,6 +219,8 @@ function explode_array(array|string $delimiters, array|string $string): array
         }
         return $stringArray;
     }
+
+    return [];
 }
 
 /**
@@ -244,7 +248,7 @@ function each__(array &$arr): array|false
 function stripslashes_deep(mixed $value): array|string
 {
     return is_array($value) ?
-    array_map([__FUNCTION__, '\Qubus\Security\Helpers\stripslashes_deep'], $value) :
+    array_map(__FUNCTION__, $value) :
     stripslashes($value);
 }
 
