@@ -244,7 +244,7 @@ function each__(array &$arr): array|false
 function stripslashes_deep(mixed $value): array|string
 {
     return is_array($value) ?
-    array_map([__FUNCTION__, 'stripslashes_deep'], $value) :
+    array_map([__FUNCTION__, '\Qubus\Security\Helpers\stripslashes_deep'], $value) :
     stripslashes($value);
 }
 
@@ -362,6 +362,7 @@ function strip_tags__(
 function die__(string $message): void
 {
     die(
-        "<link rel=\"stylesheet\" href=\"style.css\">\n<div class=\"die-alert die-alert-info\">$message</div>\n"
+        "<style>.die-alert{padding:8px 35px 8px 14px;margin:100px auto;text-shadow:0 1px 0 rgba(255,255,255,.5);text-align:center;background-color:#fcf8e3;border:1px solid #bce8f1;-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;color:#c09853;width:600px}.die-alert-info{background-color:#d9edf7;border-color:#bce8f1;color:#3a87ad}</style>\n
+            <div class=\"die-alert die-alert-info\">$message</div>\n"
     );
 }
