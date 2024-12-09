@@ -13,39 +13,12 @@ declare(strict_types=1);
 
 namespace Qubus\Security\Helpers;
 
-use Gettext\Translations;
+use Gettext\Loader\MoLoader;
 use Gettext\Translator;
-use Gettext\TranslatorInterface;
+use Gettext\TranslatorFunctions;
 
 use function d__;
 use function is_readable;
-
-/**
- * Returns the Translator object.
- *
- * @access private
- * @return Translator;
- */
-function __translator(): TranslatorInterface
-{
-    return new Translator();
-}
-
-/**
- * Displays the returned translated text.
- *
- * @param string $msgid  The translated string.
- * @param string $domain Domain lookup for translated text.
- * @return string Translated text according to current locale.
- */
-function t__(string $msgid, string $domain = ''): string
-{
-    __translator()->register();
-
-    $domain = '' !== $domain ? $domain : 'qubus';
-
-    return d__($domain, $msgid);
-}
 
 /**
  * Load default translated strings based on locale.
@@ -105,8 +78,11 @@ function load_textdomain(string $domain, string $path): bool
         return false;
     }
 
-    $translations = Translations::fromMoFile($mofile);
-    __translator()->loadTranslations($translations);
+    $loader = new MoLoader();
+    $translations = $loader->loadFile($mofile);
+    $gettext = Translator::createFromTranslations($translations);
+
+    TranslatorFunctions::register($gettext);
 
     return true;
 }
@@ -121,4 +97,18 @@ function load_core_locale(): string
     $locale = 'en';
 
     return __observer()->filter->applyFilter('core_locale', $locale);
+}
+
+/**
+ * Displays the returned translated text.
+ *
+ * @param string $msgid  The translated string.
+ * @param string $domain Domain lookup for translated text.
+ * @return string Translated text according to current locale.
+ */
+function t__(string $msgid, string $domain = ''): string
+{
+    $domain = '' !== $domain ? $domain : 'qubus';
+
+    return d__($domain, $msgid);
 }

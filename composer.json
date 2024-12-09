@@ -19,10 +19,10 @@
         }
     ],
     "require": {
-        "ext-mbstring": "*",
         "php": ">=8.2",
-        "gettext/gettext": "^4.8",
-        "gettext/languages": "^2.6",
+        "ext-mbstring": "*",
+        "gettext/gettext": "^5",
+        "gettext/translator": "^1.2",
         "ircmaxell/random-lib": "^1.2",
         "qubus/event-dispatcher": "^3"
     },
