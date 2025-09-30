@@ -16,6 +16,7 @@ namespace Qubus\Security\Helpers;
 use Gettext\Loader\MoLoader;
 use Gettext\Translator;
 use Gettext\TranslatorFunctions;
+use Qubus\Exception\Exception;
 
 use function d__;
 use function is_readable;
@@ -26,6 +27,7 @@ use function is_readable;
  * @param string $domain Text domain. Unique ID for retrieving translated strings.
  * @param string $path Path to the .mo file.
  * @return bool True on success, false on failure.
+ * @throws Exception
  */
 function load_default_textdomain(string $domain, string $path): bool
 {
@@ -42,6 +44,7 @@ function load_default_textdomain(string $domain, string $path): bool
  * @param string $domain Text domain. Unique ID for retrieving translated strings.
  * @param string $path Path to the .mo file.
  * @return bool True on success, false on failure.
+ * @throws Exception
  */
 function load_textdomain(string $domain, string $path): bool
 {
@@ -91,6 +94,7 @@ function load_textdomain(string $domain, string $path): bool
  * Loads the current or default locale.
  *
  * @return string The locale.
+ * @throws Exception
  */
 function load_core_locale(): string
 {

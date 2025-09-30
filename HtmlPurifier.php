@@ -222,7 +222,7 @@ class HtmlPurifier implements Purifier
          * large blocks of data, so we use str_replace.
          */
 
-        if (strpos($string, "\t") !== false) {
+        if (str_contains($string, "\t")) {
             $string = str_replace("\t", ' ', $string);
         }
 

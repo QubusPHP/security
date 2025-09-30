@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Qubus\Security;
 
 use Qubus\EventDispatcher\ActionFilter\Observer;
+use Qubus\Exception\Exception;
 
 use function urlencode;
 use function urldecode;
@@ -41,6 +42,7 @@ class Escaper implements CleanHtmlEntities
      * @param string $encoding       An optional argument defining the encoding used when converting characters.
      * @param bool   $doubleEncoding When double_encode is turned off PHP will not encode existing html entities,
      *                               the default is to convert everything.
+     * @throws Exception
      */
     private function htmlSpecialChars(
         string $string,
@@ -61,13 +63,13 @@ class Escaper implements CleanHtmlEntities
          *
          * @param string $encoding Default: UTF-8.
          */
-        $encoding = (new Observer())->filter->applyFilter('escaper_character_encoding', $encoding);
+        $encoding = new Observer()->filter->applyFilter('escaper_character_encoding', $encoding);
         /**
          * Filter double encoding.
          *
          * @param bool $doubleEncoding Default: true.
          */
-        $doubleEncoding = (new Observer())->filter->applyFilter('escaper_double_encoding', (bool) $doubleEncoding);
+        $doubleEncoding = new Observer()->filter->applyFilter('escaper_double_encoding', (bool) $doubleEncoding);
 
         return htmlspecialchars($string, $flags, $encoding, $doubleEncoding);
     }
@@ -76,6 +78,7 @@ class Escaper implements CleanHtmlEntities
      * Escaping for HTML blocks.
      *
      * @return string Escaped HTML block.
+     * @throws Exception
      */
     public function html(string $string): string
     {
@@ -87,6 +90,7 @@ class Escaper implements CleanHtmlEntities
      * Escaping for textarea.
      *
      * @return string Escaped string.
+     * @throws Exception
      */
     public function textarea(string $string): string
     {
@@ -178,6 +182,7 @@ class Escaper implements CleanHtmlEntities
      * Escaping for HTML attributes.
      *
      * @return string Escaped HTML attribute.
+     * @throws Exception
      */
     public function attr(string $string): string
     {
@@ -195,6 +200,7 @@ class Escaper implements CleanHtmlEntities
      *      echo '<input type="button" value="push" onclick="'.$attribute.'" />';
      *
      * @return string Escaped inline javascript.
+     * @throws Exception
      */
     public function js(string $string): string
     {

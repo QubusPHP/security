@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Qubus\Security\Helpers;
 
+use JetBrains\PhpStorm\NoReturn;
 use Qubus\EventDispatcher\ActionFilter\Observer;
+use Qubus\Exception\Exception;
 use Qubus\Security\Escaper;
 use Qubus\Security\HtmlPurifier;
 
@@ -57,6 +59,7 @@ function __observer(): Observer
  *
  * @param string $string Html element to escape.
  * @return string Escaped HTML output.
+ * @throws Exception
  */
 function esc_html(string $string): string
 {
@@ -76,6 +79,7 @@ function esc_html(string $string): string
  * @param string $string String to translate.
  * @param string $domain Optional. Text domain. Default: 'qubus'.
  * @return string Translated string.
+ * @throws Exception
  */
 function esc_html__(string $string, string $domain = 'qubus'): string
 {
@@ -86,6 +90,7 @@ function esc_html__(string $string, string $domain = 'qubus'): string
  * Escaping for textarea.
  *
  * @return string Escaped string.
+ * @throws Exception
  */
 function esc_textarea(string $string): string
 {
@@ -102,10 +107,11 @@ function esc_textarea(string $string): string
 /**
  * Escaping for url.
  *
- * @param string $url    The url to be escaped.
- * @param array  $scheme Optional. An array of acceptable schemes.
- * @param bool   $encode Whether url params should be encoded.
+ * @param string $url The url to be escaped.
+ * @param array $scheme Optional. An array of acceptable schemes.
+ * @param bool $encode Whether url params should be encoded.
  * @return string The escaped $url after the `esc_url` filter is applied.
+ * @throws Exception
  */
 function esc_url(string $url, array $scheme = ['http', 'https'], bool $encode = false): string
 {
@@ -123,6 +129,7 @@ function esc_url(string $url, array $scheme = ['http', 'https'], bool $encode = 
  * Escaping for HTML attributes.
  *
  * @return string Escaped HTML attribute.
+ * @throws Exception
  */
 function esc_attr(string $string): string
 {
@@ -143,6 +150,7 @@ function esc_attr(string $string): string
  * @param string $domain Optional. Unique identifier for retrieving translated string.
  *                       Default: 'qubus'.
  * @return string Translated string.
+ * @throws Exception
  */
 function esc_attr__(string $string, string $domain = 'qubus'): string
 {
@@ -159,6 +167,7 @@ function esc_attr__(string $string, string $domain = 'qubus'): string
  *      echo '<input type="button" value="push" onclick="'.$attribute.'" />';
  *
  * @return string Escaped inline javascript.
+ * @throws Exception
  */
 function esc_js(string $string): string
 {
@@ -184,9 +193,7 @@ function esc_js(string $string): string
  */
 function purify_html(string $string, bool $isImage = false): string
 {
-    return (
-    new HtmlPurifier()
-    )->purify($string, $isImage);
+    return new HtmlPurifier()->purify($string, $isImage);
 }
 
 /**
@@ -272,10 +279,6 @@ function flatten_array(array $array): array
 {
     $flatArray = [];
 
-    if (! is_array($array)) {
-        $array = func_get_args();
-    }
-
     foreach ($array as $key => $value) {
         if (is_array($value)) {
             $flatArray = array_merge($flatArray, flatten_array($value));
@@ -318,6 +321,7 @@ function trim__(array|string $string): array|string|null
  * @param bool   $invert       Instead of removing tags, this option checks for which tags to not remove.
  *                             Default: false.
  * @return string The processed string.
+ * @throws Exception
  */
 function strip_tags__(
     string $string,
@@ -361,7 +365,7 @@ function strip_tags__(
  *
  * @param string $message Message to be returned.
  */
-function die__(string $message): void
+#[NoReturn] function die__(string $message): void
 {
     die(
         "<style>.die-alert{padding:8px 35px 8px 14px;margin:100px auto;text-shadow:0 1px 0 rgba(255,255,255,.5);text-align:center;background-color:#fcf8e3;border:1px solid #bce8f1;-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;color:#c09853;width:600px}.die-alert-info{background-color:#d9edf7;border-color:#bce8f1;color:#3a87ad}</style>\n
