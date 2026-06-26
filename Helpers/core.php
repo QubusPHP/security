@@ -24,7 +24,6 @@ use function array_unique;
 use function count;
 use function current;
 use function explode;
-use function func_get_args;
 use function implode;
 use function is_array;
 use function key;
@@ -157,7 +156,7 @@ function esc_attr__(string $string, string $domain = 'qubus'): string
 }
 
 /**
- * Escaping for inline javascript.
+ * Escaping for inline JavaScript.
  *
  * Example usage:
  *
@@ -360,7 +359,7 @@ function strip_tags__(
 }
 
 /**
- * PHP die's function wrapped in pretty css.
+ * PHP die's function wrapped in pretty CSS.
  *
  * @param string $message Message to be returned.
  */

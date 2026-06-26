@@ -48,7 +48,7 @@ class Escaper implements CleanHtmlEntities
         string $string,
         int $flags = ENT_QUOTES | ENT_HTML5,
         string $encoding = 'UTF-8',
-        bool $doubleEncoding = true
+        bool $doubleEncoding = false
     ): string {
         if (0 === strlen($string)) {
             return '';
