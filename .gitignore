@@ -1,5 +1,7 @@
 /vendor/
 .idea
 .phpcs-cache
+.phpunit.cache/
+.pest.cache/
 composer.lock
 index.php

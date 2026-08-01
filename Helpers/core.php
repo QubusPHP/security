@@ -107,8 +107,11 @@ function esc_textarea(string $string): string
  *
  * @param string $url The url to be escaped.
  * @param array $scheme Optional. An array of acceptable schemes.
- * @param bool $encode Whether url params should be encoded.
- * @return string The escaped $url after the `esc_url` filter is applied.
+ * @param bool $encode Whether the fragment should be normalized with RFC 3986 encoding. This parameter is retained
+ *                     for backwards compatibility.
+ * @return string A validated URL escaped for use in a quoted HTML attribute.
+ *
+ * This function does not enforce a trusted host, redirect policy, or public network destination.
  * @throws Exception
  */
 function esc_url(string $url, array $scheme = ['http', 'https'], bool $encode = false): string
@@ -125,6 +128,9 @@ function esc_url(string $url, array $scheme = ['http', 'https'], bool $encode = 
 
 /**
  * Escaping for HTML attributes.
+ *
+ * The returned value is only safe inside a quoted, ordinary HTML attribute. URL, CSS, JavaScript, and srcdoc
+ * attributes require their own context-specific validation or encoding.
  *
  * @return string Escaped HTML attribute.
  * @throws Exception
@@ -156,7 +162,10 @@ function esc_attr__(string $string, string $domain = 'qubus'): string
 }
 
 /**
- * Escaping for inline JavaScript.
+ * Escaping fully constructed inline JavaScript for a quoted HTML attribute.
+ *
+ * This function does not make untrusted JavaScript code safe. Serialize untrusted values with esc_js_value(), or
+ * preferably pass them through data attributes to an external event listener.
  *
  * Example usage:
  *
@@ -180,6 +189,16 @@ function esc_js(string $string): string
 }
 
 /**
+ * Serialize an untrusted value as a JavaScript expression.
+ *
+ * @throws \JsonException
+ */
+function esc_js_value(mixed $value): string
+{
+    return __escaper()->jsValue($value);
+}
+
+/**
  * Makes content safe to print on screen.
  *
  * This function should only be used on output. With the exception of uploading
@@ -187,11 +206,20 @@ function esc_js(string $string): string
  * accepted and then purified on output for optimal results. For output of images,
  * make sure to escape with esc_url().
  *
- * @param string $string Text to purify.
+ * @param array<array-key, string>|string|null $string Text to purify, or null to return a purifier instance.
+ * @return ($string is null ? HtmlPurifier : ($isImage is true
+ *     ? ($string is array ? array<array-key, bool> : bool)
+ *     : ($string is array ? array<array-key, string> : string)))
  */
-function purify_html(string $string, bool $isImage = false): string
+function purify_html(string|array|null $string = null, bool $isImage = false): HtmlPurifier|string|bool|array
 {
-    return new HtmlPurifier()->purify($string, $isImage);
+    $purifier = new HtmlPurifier();
+
+    if ($string === null) {
+        return $purifier;
+    }
+
+    return $purifier->purify($string, $isImage);
 }
 
 /**
