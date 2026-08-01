@@ -20,14 +20,15 @@
     ],
     "require": {
         "php": ">=8.4",
+        "ext-dom": "*",
         "ext-mbstring": "*",
+        "ext-libxml": "*",
         "gettext/gettext": "^5",
         "gettext/translator": "^1.2",
-        "ircmaxell/random-lib": "^1.2",
         "qubus/event-dispatcher": "^4"
     },
     "require-dev": {
-        "qubus/qubus-coding-standard": "^2",
+        "qubus/qubus-coding-standard": "^2.1",
         "squizlabs/php_codesniffer": "^3"
     },
     "autoload": {
@@ -40,7 +41,7 @@
         ]
     },
     "scripts": {
-        "test": "vendor/bin/phpunit --colors=always",
+        "test": "vendor/bin/pest --colors=always",
         "cs-check": "phpcs",
         "cs-fix": "phpcbf"
     },

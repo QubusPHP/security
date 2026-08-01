@@ -34,20 +34,29 @@ interface CleanHtmlEntities
      *
      * @param string $url    The url to be escaped.
      * @param array  $scheme The url scheme.
-     * @param bool   $encode Whether url params should be encoded.
-     * @return string The escaped $url after the `esc_url` filter is applied.
+     * @param bool   $encode Whether the fragment should be normalized with RFC 3986 encoding. This parameter is
+     *                       retained for backwards compatibility.
+     * @return string A validated URL escaped for use in a quoted HTML attribute, or an empty string when invalid.
+     *
+     * This method does not enforce a trusted host, redirect policy, or public network destination.
      */
     public function url(string $url, array $scheme = [], bool $encode = false): string;
 
     /**
      * Escaping for HTML attributes.
      *
+     * The returned value is only safe inside a quoted, ordinary HTML attribute. URL, CSS, JavaScript, and srcdoc
+     * attributes require their own context-specific validation or encoding.
+     *
      * @return string Escaped HTML attribute.
      */
     public function attr(string $string): string;
 
     /**
-     * Escaping for inline javascript.
+     * Escaping fully constructed inline JavaScript for a quoted HTML attribute.
+     *
+     * This method does not make untrusted JavaScript code safe. Values must be safely serialized before they are
+     * interpolated into JavaScript code.
      *
      * @return string Escaped inline javascript.
      */

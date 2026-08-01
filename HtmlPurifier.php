@@ -13,14 +13,20 @@ declare(strict_types=1);
 
 namespace Qubus\Security;
 
+use Dom\Element;
+use Dom\HTMLDocument;
+use Dom\Node;
+use Throwable;
+
 use function array_keys;
 use function array_search;
-use function chr;
 use function count;
-use function hexdec;
 use function html_entity_decode;
+use function htmlspecialchars;
 use function implode;
+use function in_array;
 use function is_array;
+use function ltrim;
 use function preg_match;
 use function preg_match_all;
 use function preg_quote;
@@ -28,20 +34,27 @@ use function preg_replace;
 use function preg_replace_callback;
 use function rawurldecode;
 use function str_replace;
+use function str_ireplace;
 use function stripos;
 use function stripslashes;
 use function stristr;
 use function strlen;
-use function strpos;
+use function strtolower;
 use function strtoupper;
 use function substr;
+use function trim;
 
-use const ENT_COMPAT;
 use const ENT_HTML5;
+use const ENT_QUOTES;
+use const ENT_SUBSTITUTE;
+use const LIBXML_COMPACT;
+use const LIBXML_NOERROR;
 use const PREG_SET_ORDER;
 
 class HtmlPurifier implements Purifier
 {
+    private const int MAXIMUM_DECODE_PASSES = 8;
+
     /** @var array $neverAllowedStr */
     protected array $neverAllowedStr = [
         'document.cookie' => '[removed]',
@@ -66,7 +79,7 @@ class HtmlPurifier implements Purifier
         'expression\s*(\(|&\#40;)', // CSS and IE
         'vbscript\s*:', // IE, surprise!
         'Redirect\s+30\d',
-        "([\"'])?data\s*:[^\\1]*?base64[^\\1]*?,[^\\1]*?\\1?",
+        'data\s*:[^,]*?base64[^,]*?,',
     ];
 
     /**
@@ -74,7 +87,39 @@ class HtmlPurifier implements Purifier
      *
      * @var array $xssDisalowedAttibutes
      */
-    public array $xssDisalowedAttibutes = ['on\w*', 'xmlns', 'formaction']; /*'style',*/
+    public array $xssDisalowedAttibutes = ['on\w*', 'style', 'xmlns', 'formaction'];
+
+    /**
+     * Elements retained by the final allow-list pass.
+     *
+     * The misspelled legacy public properties above remain supported. These
+     * explicit allow lists provide a safer customization point for new code.
+     *
+     * @var string[]
+     */
+    public array $allowedHtmlElements = [
+        'a', 'abbr', 'address', 'article', 'aside', 'b', 'bdi', 'bdo', 'blockquote', 'br',
+        'caption', 'cite', 'code', 'col', 'colgroup', 'dd', 'del', 'details', 'dfn', 'div',
+        'dl', 'dt', 'em', 'figcaption', 'figure', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'hr', 'i', 'img', 'ins', 'kbd', 'li', 'main', 'mark', 'ol', 'p', 'pre', 'q',
+        'rp', 'rt', 'ruby', 's', 'samp', 'section', 'small', 'span', 'strong', 'sub',
+        'summary', 'sup', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'time', 'tr',
+        'u', 'ul', 'var', 'wbr',
+    ];
+
+    /** @var string[] */
+    public array $allowedHtmlAttributes = [
+        'abbr', 'alt', 'aria-*', 'class', 'colspan', 'data-*', 'datetime', 'decoding',
+        'dir', 'download', 'headers', 'height', 'hidden', 'href', 'hreflang', 'id',
+        'lang', 'loading', 'open', 'referrerpolicy', 'rel', 'reversed', 'role', 'rowspan',
+        'scope', 'src', 'start', 'target', 'title', 'type', 'value', 'width',
+    ];
+
+    /** @var string[] */
+    public array $allowedUriSchemes = ['http', 'https', 'mailto', 'tel'];
+
+    /** @var string[] */
+    public array $uriAttributes = ['cite', 'href', 'src'];
 
     /**
      * If a tag containing any of the words in the list below is found,
@@ -150,19 +195,20 @@ class HtmlPurifier implements Purifier
      * accepted and then purified on output for optimal results. For output of images,
      * make sure to escape with esc_url().
      *
-     * @param string|string[] $string The string to purify.
+     * @param array<array-key, string>|string $string The string or keyed strings to purify.
      * @param bool $isImage Is the string an image?
-     * @return string|bool|array Escaped rich text.
+     * @return ($isImage is true
+     *     ? ($string is array ? array<array-key, bool> : bool)
+     *     : ($string is array ? array<array-key, string> : string))
      */
-    public function purify($string, bool $isImage = false): string|bool|array
+    public function purify(mixed $string, bool $isImage = false): string|bool|array
     {
         /*
-         * Is the string an array?
-         *
+         * An array?
          */
         if (is_array($string)) {
-            foreach ($string as $key => &$value) {
-                $string[$key] = $this->purify($value);
+            foreach ($string as $key => $value) {
+                $string[$key] = $this->purify($value, $isImage);
             }
 
             return $string;
@@ -187,11 +233,15 @@ class HtmlPurifier implements Purifier
          *
          */
         if (stripos($string, '%') !== false) {
-            do {
+            for ($pass = 0; $pass < self::MAXIMUM_DECODE_PASSES; $pass++) {
                 $oldstr = $string;
                 $string = rawurldecode($string);
                 $string = preg_replace_callback('#%(?:\s*[0-9a-f]){2,}#i', [$this, 'urlDecodeSpaces'], $string);
-            } while ($oldstr !== $string);
+
+                if ($oldstr === $string) {
+                    break;
+                }
+            }
             unset($oldstr);
         }
 
@@ -378,7 +428,7 @@ class HtmlPurifier implements Purifier
             return $string === $convertedString;
         }
 
-        return $string;
+        return $this->sanitizeHtmlFragment($string);
     }
 
     /**
@@ -400,19 +450,17 @@ class HtmlPurifier implements Purifier
             return $string;
         }
 
-        $string = html_entity_decode($string, ENT_COMPAT | ENT_HTML5, $charset);
+        $string = preg_replace_callback(
+            '/&#(?:x[0-9a-f]{1,6}|[0-9]{1,7});?/i',
+            static function (array $matches): string {
+                $entity = $matches[0];
 
-        $string = preg_replace_callback('~&#x(0*[0-9a-f]{2,5})~i', function ($matches) {
-            foreach ($matches as $match) {
-                return chr(hexdec($match));
-            }
-        }, $string);
+                return str_ends_with($entity, ';') ? $entity : $entity . ';';
+            },
+            $string
+        );
 
-        return preg_replace_callback('~&#([0-9]{2,4})~', function ($matches) {
-            foreach ($matches as $match) {
-                return chr($match);
-            }
-        }, $string);
+        return html_entity_decode($string, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, $charset);
     }
 
     /**
@@ -472,7 +520,15 @@ class HtmlPurifier implements Purifier
              * Adobe Photoshop puts XML metadata into JFIF images,
              * including namespacing, so we have to allow this for images.
              */
-            unset($evilAttributes[array_search('xmlns', $evilAttributes)]);
+            $xmlnsIndex = array_search('xmlns', $evilAttributes, true);
+
+            if ($xmlnsIndex !== false) {
+                unset($evilAttributes[$xmlnsIndex]);
+            }
+        }
+
+        if ($evilAttributes === []) {
+            return $string;
         }
 
         do {
@@ -481,7 +537,7 @@ class HtmlPurifier implements Purifier
 
             // find occurrences of illegal attribute strings with quotes (042 and 047 are octal quotes)
             preg_match_all(
-                '/(' . implode('|', $evilAttributes) . ')\s*=\s*(\042|\047)([^\\2]*?)(\\2)/is',
+                '/(' . implode('|', $evilAttributes) . ')\s*=\s*(?<quote>["\'])(.*?)(?:\k<quote>)/is',
                 $string,
                 $matches,
                 PREG_SET_ORDER
@@ -608,7 +664,7 @@ class HtmlPurifier implements Purifier
     {
         $out = '';
 
-        if (preg_match_all('#\s*[a-z\-]+\s*=\s*(\042|\047)([^\\1]*?)\\1#is', $string, $matches)) {
+        if (preg_match_all('#\s*[a-z\-]+\s*=\s*(["\'])(.*?)\1#is', $string, $matches)) {
             foreach ($matches[0] as $match) {
                 $out .= preg_replace("#/\*.*?\*/#s", '', $match);
             }
@@ -668,7 +724,7 @@ class HtmlPurifier implements Purifier
      */
     protected function neverAllowed(string $string): string
     {
-        $string = str_replace(array_keys($this->neverAllowedStr), $this->neverAllowedStr, $string);
+        $string = str_ireplace(array_keys($this->neverAllowedStr), $this->neverAllowedStr, $string);
 
         foreach ($this->neverAllowedRegex as $regex) {
             $string = preg_replace('#' . $regex . '#is', '[removed]', $string);
@@ -702,6 +758,205 @@ class HtmlPurifier implements Purifier
     }
 
     /**
+     * Apply a structural allow list after the legacy compatibility filters.
+     *
+     * Browser HTML parsing rules cannot be modeled safely with regular
+     * expressions alone. Parsing the fragment also closes namespace, malformed
+     * markup, raw-text element, and unhandled URL-attribute bypasses.
+     */
+    protected function sanitizeHtmlFragment(string $string): string
+    {
+        try {
+            $document = HTMLDocument::createFromString(
+                '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>' . $string . '</body></html>',
+                LIBXML_COMPACT | LIBXML_NOERROR
+            );
+        } catch (Throwable) {
+            return htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+        }
+
+        $body = $document->body;
+
+        if (! $body instanceof Element) {
+            return htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+        }
+
+        $this->sanitizeDomChildren($body);
+
+        return $body->innerHTML;
+    }
+
+    protected function sanitizeDomChildren(Node $parent): void
+    {
+        for ($node = $parent->firstChild; $node !== null; $node = $next) {
+            $next = $node->nextSibling;
+
+            if (! $node instanceof Element) {
+                if ($node->nodeType !== XML_TEXT_NODE) {
+                    $parent->removeChild($node);
+                }
+
+                continue;
+            }
+
+            $tag = strtolower($node->tagName);
+
+            if ($this->isRawTextOrEmbeddedElement($tag)) {
+                $parent->removeChild($node);
+                continue;
+            }
+
+            if (! $this->containsCaseInsensitive($tag, $this->allowedHtmlElements)) {
+
+                $this->sanitizeDomChildren($node);
+
+                while ($node->firstChild !== null) {
+                    $parent->insertBefore($node->firstChild, $node);
+                }
+
+                $parent->removeChild($node);
+                continue;
+            }
+
+            $this->sanitizeElementAttributes($node, $tag);
+            $this->sanitizeDomChildren($node);
+        }
+    }
+
+    protected function sanitizeElementAttributes(Element $element, string $tag): void
+    {
+        for ($index = $element->attributes->length - 1; $index >= 0; $index--) {
+            $attribute = $element->attributes->item($index);
+
+            if ($attribute === null) {
+                continue;
+            }
+
+            $name = strtolower($attribute->name);
+
+            if ($this->isDangerousAttribute($name) || ! $this->isAllowedAttribute($name)) {
+                $element->removeAttributeNode($attribute);
+                continue;
+            }
+
+            $value = $this->removeInvisibleCharacters($attribute->value, false);
+
+            if ($this->containsCaseInsensitive($name, $this->uriAttributes) && ! $this->isSafeUri($value, $tag)) {
+                $element->removeAttributeNode($attribute);
+                continue;
+            }
+
+            if ($name === 'target' && ! in_array(strtolower($value), ['_blank', '_self'], true)) {
+                $element->removeAttributeNode($attribute);
+                continue;
+            }
+
+            $element->setAttribute($name, $value);
+        }
+
+        if ($tag === 'a' && strtolower($element->getAttribute('target') ?? '') === '_blank') {
+            $relations = preg_split(
+                '/\s+/',
+                strtolower(trim($element->getAttribute('rel') ?? '')),
+                -1,
+                PREG_SPLIT_NO_EMPTY
+            );
+            $relations = is_array($relations) ? $relations : [];
+
+            foreach (['noopener', 'noreferrer'] as $required) {
+                if (! in_array($required, $relations, true)) {
+                    $relations[] = $required;
+                }
+            }
+
+            $element->setAttribute('rel', implode(' ', $relations));
+        }
+    }
+
+    protected function isAllowedAttribute(string $name): bool
+    {
+        foreach ($this->allowedHtmlAttributes as $allowed) {
+            $allowed = strtolower($allowed);
+
+            if ($allowed === $name) {
+                return true;
+            }
+
+            if (str_ends_with($allowed, '-*') && str_starts_with($name, substr($allowed, 0, -1))) {
+                return preg_match('/^[a-z][a-z0-9_.:-]*$/', $name) === 1;
+            }
+        }
+
+        return false;
+    }
+
+    protected function isDangerousAttribute(string $name): bool
+    {
+        if (preg_match('/^on/i', $name) === 1) {
+            return true;
+        }
+
+        return in_array($name, ['formaction', 'srcdoc', 'srcset', 'style', 'xmlns'], true);
+    }
+
+    protected function isSafeUri(string $uri, string $tag): bool
+    {
+        $normalized = trim($uri);
+
+        for ($pass = 0; $pass < self::MAXIMUM_DECODE_PASSES; $pass++) {
+            $decoded = $this->entityDecode(rawurldecode($normalized));
+
+            if ($decoded === $normalized) {
+                break;
+            }
+
+            $normalized = $decoded;
+        }
+
+        $normalized = preg_replace('/[\x00-\x20\x7F]+/', '', $normalized);
+
+        if ($normalized === '') {
+            return true;
+        }
+
+        if (preg_match('/^([a-z][a-z0-9+.-]*):/i', $normalized, $matches) !== 1) {
+            return true;
+        }
+
+        $scheme = strtolower($matches[1]);
+
+        if (in_array($scheme, ['blob', 'data', 'file', 'javascript', 'vbscript'], true)) {
+            return false;
+        }
+
+        if (! $this->containsCaseInsensitive($scheme, $this->allowedUriSchemes)) {
+            return false;
+        }
+
+        return $tag === 'a' || in_array($scheme, ['http', 'https'], true);
+    }
+
+    protected function isRawTextOrEmbeddedElement(string $tag): bool
+    {
+        return in_array(
+            $tag,
+            [
+                'applet', 'audio', 'embed', 'iframe', 'math', 'noscript', 'object', 'plaintext',
+                'script', 'style', 'svg', 'template', 'textarea', 'video', 'xmp',
+            ],
+            true
+        );
+    }
+
+    /**
+     * @param string[] $values
+     */
+    protected function containsCaseInsensitive(string $needle, array $values): bool
+    {
+        return array_any($values, fn($value) => strtolower($value) === strtolower($needle));
+    }
+
+    /**
      * Sanitize Filename
      *
      * Tries to sanitize filenames in order to prevent directory traversal attempts
@@ -718,6 +973,13 @@ class HtmlPurifier implements Purifier
     public function sanitizeFilename(string $string, bool $relativePath = false): string
     {
         $bad = $this->filenameBadChars;
+        $bad[] = '..\\';
+        $bad[] = '%00';
+        $bad[] = '%25';
+        $bad[] = '%2e';
+        $bad[] = '%2f';
+        $bad[] = '%5c';
+        $bad[] = '\\';
 
         if (! $relativePath) {
             $bad[] = './';
@@ -725,11 +987,17 @@ class HtmlPurifier implements Purifier
         }
 
         $string = $this->removeInvisibleCharacters($string, false);
+        $string = preg_replace('/[\x00-\x1F\x7F]+/', '', $string);
 
         do {
             $old = $string;
-            $string = str_replace($bad, '', $string);
+            $string = str_ireplace($bad, '', $string);
         } while ($old !== $string);
+
+        if ($relativePath) {
+            $string = preg_replace('/^[a-z]:/i', '', $string);
+            $string = ltrim($string, '/');
+        }
 
         return stripslashes($string);
     }
