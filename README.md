@@ -13,4 +13,4 @@ $ composer require qubus/security
 ```
 
 ## More Info
-- [Documentation](https://codefyphp.com/docs/digging-deeper/helpers/))
+- [Documentation](https://codefyphp.com/docs/digging-deeper/helpers/)
